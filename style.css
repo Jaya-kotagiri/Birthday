@@ -1,0 +1,41 @@
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+#scene {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(#f3728c, #ffffff);
+}
+
+#cat, #bear {
+  position: absolute;
+  image-rendering: pixelated;
+  user-select: none;
+}
+
+#cat {
+  width: 48px;
+}
+
+#bear {
+  width: 80px;
+}
+
+.giftBtn {
+  background: #ff8fa3;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.giftBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
