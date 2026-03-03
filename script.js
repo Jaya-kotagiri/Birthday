@@ -4,27 +4,39 @@
 
 const cat = document.getElementById("cat");
 const bear = document.getElementById("bear");
+const scene = document.getElementById("scene");
 
 /* =========================
-   CREATE CAUGHT IMAGE ELEMENT
-   This will replace both characters
+   PRELOAD CAUGHT IMAGES
+========================= */
+
+const caughtFrames = [
+  "assets/caught_1.png",
+  "assets/caught_2.png"
+];
+
+caughtFrames.forEach(src => {
+  const img = new Image();
+  img.src = src;
+});
+
+/* =========================
+   CREATE CAUGHT IMAGE
 ========================= */
 
 const caughtImg = document.createElement("img");
 caughtImg.style.position = "absolute";
 caughtImg.style.display = "none";
 caughtImg.style.imageRendering = "pixelated";
-caughtImg.style.width = "140px"; // adjust if needed
-document.getElementById("scene").appendChild(caughtImg);
-
+caughtImg.style.width = "160px";
+scene.appendChild(caughtImg);
 
 /* =========================
-   SCREEN HELPERS
+   HELPERS
 ========================= */
 
 function getW() { return window.innerWidth; }
 function getH() { return window.innerHeight; }
-
 
 /* =========================
    POSITIONS
@@ -32,13 +44,10 @@ function getH() { return window.innerHeight; }
 
 let catX = 200;
 let catY = 200;
-
 let bearX = 50;
 let bearY = 50;
-
 let catDX = 1.6;
 let catDY = 1.2;
-
 
 /* =========================
    STATES
@@ -47,7 +56,7 @@ let catDY = 1.2;
 let running = true;
 let bearTired = false;
 let finished = false;
-
+let catHeld = false;
 
 /* =========================
    FRAMES
@@ -58,44 +67,60 @@ const catRunFrames = [
   "assets/cat_run_2.png"
 ];
 
+const catPetFrames = [
+  "assets/cat_pet_1.png",
+  "assets/cat_pet_2.png"
+];
+
 const bearRunFrames = [
   "assets/bear_run_1.png",
   "assets/bear_run_2.png"
-];
-
-const caughtFrames = [
-  "assets/caught_1.png",
-  "assets/caught_2.png"
 ];
 
 let catFrame = 0;
 let bearFrame = 0;
 let caughtFrame = 0;
 
-
 /* =========================
-   ANIMATION INTERVALS
+   CAT RUN ANIMATION
 ========================= */
 
-const catInterval = setInterval(() => {
-  if (!running) return;
+setInterval(() => {
+  if (!running || catHeld || finished) return;
   catFrame = (catFrame + 1) % catRunFrames.length;
   cat.src = catRunFrames[catFrame];
 }, 170);
 
-const bearInterval = setInterval(() => {
-  if (!running || bearTired) return;
+/* =========================
+   CAT PET ANIMATION
+========================= */
+
+setInterval(() => {
+  if (!catHeld || finished) return;
+  catFrame = (catFrame + 1) % catPetFrames.length;
+  cat.src = catPetFrames[catFrame];
+}, 250);
+
+/* =========================
+   BEAR RUN ANIMATION
+========================= */
+
+setInterval(() => {
+  if (!running || bearTired || finished) return;
   bearFrame = (bearFrame + 1) % bearRunFrames.length;
   bear.src = bearRunFrames[bearFrame];
 }, 200);
-
 
 /* =========================
    CAT MOVEMENT
 ========================= */
 
 function moveCat() {
-  if (!running) return;
+
+  if (!running || catHeld || finished) {
+    requestAnimationFrame(moveCat);
+    return;
+  }
 
   catX += catDX;
   catY += catDY;
@@ -103,23 +128,22 @@ function moveCat() {
   if (catX <= 0 || catX >= getW() - 60) catDX *= -1;
   if (catY <= 0 || catY >= getH() - 60) catDY *= -1;
 
-  // Flip based on direction
-  if (catDX < 0) {
-    cat.style.transform = `translate(${catX}px, ${catY}px) scaleX(-1)`;
-  } else {
-    cat.style.transform = `translate(${catX}px, ${catY}px) scaleX(1)`;
-  }
+  cat.style.transform =
+    `translate(${catX}px, ${catY}px) scaleX(${catDX < 0 ? -1 : 1})`;
 
   requestAnimationFrame(moveCat);
 }
-
 
 /* =========================
    BEAR CHASE
 ========================= */
 
 function moveBear() {
-  if (!running) return;
+
+  if (!running || finished) {
+    requestAnimationFrame(moveBear);
+    return;
+  }
 
   if (!bearTired) {
     let dx = catX - bearX;
@@ -127,79 +151,77 @@ function moveBear() {
     let distance = Math.sqrt(dx*dx + dy*dy);
 
     if (distance > 1) {
-      let moveX = (dx / distance) * 1.4;
-      let moveY = (dy / distance) * 1.4;
+      let moveX = (dx / distance) * 1.6;
+      let moveY = (dy / distance) * 1.6;
 
       bearX += moveX;
       bearY += moveY;
 
-      // Flip bear depending on movement direction
-      if (moveX < 0) {
-        bear.style.transform = `translate(${bearX}px, ${bearY}px) scaleX(-1)`;
-      } else {
-        bear.style.transform = `translate(${bearX}px, ${bearY}px) scaleX(1)`;
-      }
+      bear.style.transform =
+        `translate(${bearX}px, ${bearY}px) scaleX(${moveX < 0 ? -1 : 1})`;
     }
   }
 
-  // Catch detection
   if (!finished &&
-      Math.abs(bearX - catX) < 30 &&
-      Math.abs(bearY - catY) < 30) {
+      Math.abs(bearX - catX) < 28 &&
+      Math.abs(bearY - catY) < 28) {
     triggerCaught();
   }
 
   requestAnimationFrame(moveBear);
 }
 
-
 /* =========================
-   BEAR TIRED EVERY 3 SEC
+   BEAR TIRED LOOP
 ========================= */
 
 setInterval(() => {
-  if (!running) return;
+  if (!running || finished) return;
 
   bearTired = true;
   bear.src = "assets/bear_tired.png";
 
   setTimeout(() => {
-    if (running) {
+    if (!finished) {
       bearTired = false;
       bear.src = bearRunFrames[0];
     }
-  }, 1000);
+  }, 900);
 
-}, 3000);
-
+}, 7000);
 
 /* =========================
-   CAUGHT SEQUENCE
+   CAUGHT SEQUENCE (FIXED)
 ========================= */
 
 function triggerCaught() {
+
+  if (finished) return;
+
   finished = true;
   running = false;
+  catHeld = false;
 
-  // Stop intervals
-  clearInterval(catInterval);
-  clearInterval(bearInterval);
-
-  // Hide original characters
   cat.style.display = "none";
   bear.style.display = "none";
 
-  // Position caught image at cat location
   caughtImg.style.left = catX + "px";
   caughtImg.style.top = catY + "px";
+  caughtImg.style.transform = "none";
   caughtImg.style.display = "block";
 
-  caughtImg.src = caughtFrames[0];
+  let localFrame = 0;
 
   const caughtAnim = setInterval(() => {
-    caughtFrame = (caughtFrame + 1) % caughtFrames.length;
-    caughtImg.src = caughtFrames[caughtFrame];
-  }, 400);
+    localFrame = (localFrame + 1) % caughtFrames.length;
+
+    // Force browser repaint
+    caughtImg.src = "";
+    setTimeout(() => {
+      caughtImg.src = caughtFrames[localFrame];
+    }, 10);
+
+  }, 350);
 
   setTimeout(() => {
     clearInterval(caughtAnim);
@@ -207,6 +229,30 @@ function triggerCaught() {
   }, 4000);
 }
 
+/* =========================
+   LONG PRESS (SMOOTH)
+========================= */
+
+let holdTimeout = null;
+
+function startHold() {
+  if (finished) return;
+
+  holdTimeout = setTimeout(() => {
+    catHeld = true;
+  }, 200);
+}
+
+function endHold() {
+  clearTimeout(holdTimeout);
+  if (!finished) catHeld = false;
+}
+
+cat.addEventListener("mousedown", startHold);
+cat.addEventListener("mouseup", endHold);
+cat.addEventListener("mouseleave", endHold);
+cat.addEventListener("touchstart", startHold);
+cat.addEventListener("touchend", endHold);
 
 /* =========================
    RESTART POPUP
@@ -270,6 +316,10 @@ function showRestartPopup() {
   };
 }
 
+/* =========================
+   VIDEO MODAL
+========================= */
+
 function openVideoModal() {
 
   const overlay = document.createElement("div");
@@ -285,17 +335,14 @@ function openVideoModal() {
   overlay.style.zIndex = "1000";
 
   const modal = document.createElement("div");
-  modal.style.position = "relative";
   modal.style.display = "flex";
   modal.style.flexDirection = "column";
   modal.style.alignItems = "center";
 
   modal.innerHTML = `
-    <video id="birthdayVideo" controls autoplay style="
+    <video controls autoplay style="
       max-width: 80vw;
       max-height: 80vh;
-      width: auto;
-      height: auto;
       border-radius: 20px;
       box-shadow: 0 15px 40px rgba(0,0,0,0.4);
       background: black;
@@ -318,15 +365,11 @@ function openVideoModal() {
 
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
-  overlay.style.opacity = "0";
-  overlay.style.transition = "opacity 0.3s ease";
-  setTimeout(() => overlay.style.opacity = "1", 10);
 
   document.getElementById("closeVideo").onclick = () => {
     document.body.removeChild(overlay);
   };
 }
-
 
 /* =========================
    START

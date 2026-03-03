@@ -1,13 +1,15 @@
 body {
   margin: 0;
   overflow: hidden;
+  background-image: url('assets/background_diamonds.png'); /* Replace with your image filename */
+  background-color: #FFFCE0;
 }
 
 #scene {
   position: relative;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(#f3728c, #ffffff);
+  /*background: linear-gradient(#f3728c, #ffffff);*/
 }
 
 #cat, #bear {
