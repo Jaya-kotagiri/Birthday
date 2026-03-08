@@ -312,7 +312,7 @@ function showRestartPopup() {
   };
 
   document.getElementById("surpriseBtn").onclick = () => {
-    openVideoModal();
+    window.open("https://youtu.be/PGwzPFnlUhc", "_blank");
   };
 }
 
@@ -340,15 +340,20 @@ function openVideoModal() {
   modal.style.alignItems = "center";
 
   modal.innerHTML = `
-    <video controls autoplay style="
-      max-width: 80vw;
-      max-height: 80vh;
-      border-radius: 20px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-      background: black;
-    ">
-      <source src="assets/surprise.mp4" type="video/mp4">
-    </video>
+    <iframe 
+      src="https://www.youtube.com/embed/PGwzPFnlUhc?autoplay=1&playsinline=1"
+      style="
+        max-width:80vw;
+        max-height:80vh;
+        width:80vw;
+        height:80vh;
+        border:none;
+        border-radius:20px;
+        box-shadow:0 15px 40px rgba(0,0,0,0.4);
+      "
+      allow="autoplay; encrypted-media"
+      allowfullscreen>
+    </iframe>
 
     <button id="closeVideo" style="
       margin-top: 20px;
